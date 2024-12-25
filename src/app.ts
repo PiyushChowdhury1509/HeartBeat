@@ -1,8 +1,24 @@
-import express, {Express,Request,Response} from 'express'
+import express, {Express,Request,Response,NextFunction} from 'express'
+import { UserAuth,AdminAuth } from './middlewares/auth';
 
 const app:Express=express();
-const PORT=4000;
+const PORT:number=4000;
 
+//middleware
+app.get('/admin',AdminAuth,(req:Request,res:Response)=>{
+    res.status(201).send('admin data');
+})
+
+app.get('/user',UserAuth,(req:Request,res:Response)=>{
+    res.status(201).send('user data');
+})
+
+//error handling
+app.get('/error',(req:Request,res:Response)=>{
+    throw new Error('error occurred');
+})
+
+//request query and params
 app.get('/test',(req:Request,res:Response)=>{
     const {name}=req.query;
     const {age}=req.query;
@@ -14,8 +30,12 @@ app.post('/test/:userId/:siblings',(req:Request,res:Response)=>{
     res.send({"userid":userId,"siblings":siblings});
 })
 
-app.use('/',(req:Request,res:Response)=>{
-    res.send("bye bye bye");
+//error handler
+app.use('/',(err:Error,req:Request,res:Response,next:NextFunction)=>{
+    if(err){
+        console.log(err.message)
+        res.status(500).send(`something went wrong: ${err}`)
+    }
 })
 
 app.listen(PORT,()=>{
