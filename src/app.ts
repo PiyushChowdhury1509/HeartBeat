@@ -1,8 +1,18 @@
-import express, {Express,Request,Response,NextFunction} from 'express'
+import 'dotenv/config'
+import express, { Express,Request,Response,NextFunction } from 'express'
 import { UserAuth,AdminAuth } from './middlewares/auth';
+import connectDB from './config/connectDB';
 
 const app:Express=express();
 const PORT:number=4000;
+
+connectDB()
+.then(()=>{
+    console.log("database successfully connected");
+    app.listen(PORT,()=>{
+        console.log(`server is listening on PORT ${PORT}`)
+    })
+})
 
 //middleware
 app.get('/admin',AdminAuth,(req:Request,res:Response)=>{
@@ -36,8 +46,4 @@ app.use('/',(err:Error,req:Request,res:Response,next:NextFunction)=>{
         console.log(err.message)
         res.status(500).send(`something went wrong: ${err}`)
     }
-})
-
-app.listen(PORT,()=>{
-    console.log(`server listening on port ${PORT}`);
 })
