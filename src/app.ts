@@ -1,49 +1,47 @@
-import 'dotenv/config'
-import express, { Express,Request,Response,NextFunction } from 'express'
-import { UserAuth,AdminAuth } from './middlewares/auth';
-import connectDB from './config/connectDB';
+import "dotenv/config";
+import cors from "cors";
+import compression from "compression";
+import express, { Express, Request, Response, NextFunction } from "express";
+import bodyParser from "body-parser";
+import connectDB from "./config/connectDB";
+import User from "./models/user";
+import { UserType } from "./schemas/userSchema";
 
-const app:Express=express();
-const PORT:number=4000;
+const app: Express = express();
+const PORT: number = 4000;
 
-connectDB()
-.then(()=>{
-    console.log("database successfully connected");
-    app.listen(PORT,()=>{
-        console.log(`server is listening on PORT ${PORT}`)
-    })
-})
+app.use(cors());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(compression());
 
-//middleware
-app.get('/admin',AdminAuth,(req:Request,res:Response)=>{
-    res.status(201).send('admin data');
-})
+app.post("/user", async (req: Request, res: Response) => {
+  try {
+    const body = req.body as UserType;
+    const newUser = new User(body);
+    await newUser.save();
+    res
+      .status(200)
+      .json({ message: "user created successfully", user: newUser });
+  } catch (err) {
+    const error = err as Error;
+    console.error(`an error occurred: ${error}`);
+    res
+      .status(500)
+      .json({ message: "an error occurred", error: error.message });
+  }
+});
 
-app.get('/user',UserAuth,(req:Request,res:Response)=>{
-    res.status(201).send('user data');
-})
+app.use("/", (err: Error, req: Request, res: Response, next: NextFunction) => {
+  if (err) {
+    console.log("an error occurred: ", err);
+    res.status(500).send("something went wrong");
+  }
+});
 
-//error handling
-app.get('/error',(req:Request,res:Response)=>{
-    throw new Error('error occurred');
-})
-
-//request query and params
-app.get('/test',(req:Request,res:Response)=>{
-    const {name}=req.query;
-    const {age}=req.query;
-    res.send({"name": name,"age": age});
-})
-
-app.post('/test/:userId/:siblings',(req:Request,res:Response)=>{
-    const {userId,siblings}=req.params;
-    res.send({"userid":userId,"siblings":siblings});
-})
-
-//error handler
-app.use('/',(err:Error,req:Request,res:Response,next:NextFunction)=>{
-    if(err){
-        console.log(err.message)
-        res.status(500).send(`something went wrong: ${err}`)
-    }
-})
+connectDB().then(() => {
+  console.log("database successfully connected");
+  app.listen(PORT, () => {
+    console.log(`server is listening on PORT ${PORT}`);
+  });
+});
