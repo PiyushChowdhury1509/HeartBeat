@@ -6,3 +6,16 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum Gender{
+  male
+  female
+  others
+}
+model User{
+  id Int @id @default(autoincrement())
+  firstName String 
+  lastName String?
+  age Int
+  gender Gender
+}
