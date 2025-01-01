@@ -6,7 +6,7 @@ import bodyParser from "body-parser";
 import connectDB from "./config/connectDB";
 import User from "./models/user";
 import { UserType } from "./schemas/userSchema";
-import { PrismaClient,Gender, Prisma } from "@prisma/client";
+import { PrismaClient, Gender, Prisma } from "@prisma/client";
 
 const app: Express = express();
 const PORT: number = 4000;
@@ -17,30 +17,55 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(compression());
 
-app.post('/test',async (req:Request,res:Response)=>{
-    try{
-        const body=req.body;
-        const user=await prisma.user.create({
-            data:body
-        });
-        res.status(200).json({message:"registration successfull",user: user});
-    } catch(err){
-        const error=err as Error
-        console.log(`an error occurred: ${error}`);
-        res.status(500).json({message: "an error occurred while registering",error: error.message})
-    }
-})
+app.post("/test", async (req: Request, res: Response) => {
+  try {
+    const body = req.body;
+    const user = await prisma.user.create({
+      data: body,
+    });
+    res.status(200).json({ message: "registration successfull", user: user });
+  } catch (err) {
+    const error = err as Error;
+    console.log(`an error occurred: ${error}`);
+    res
+      .status(500)
+      .json({
+        message: "an error occurred while registering",
+        error: error.message,
+      });
+  }
+});
 
-app.get('/test',async (req:Request,res:Response)=>{
-    try{
-        const users = await prisma.user.findMany();
-        res.status(200).json({users:users});
-    } catch(err){
-        const error=err as Error;
-        console.log(`an error occurred: ${error}`);
-        res.status(500).json({message: `an error occurred: ${error}`});
-    }
-})
+app.get("/test", async (req: Request, res: Response) => {
+  try {
+    const users = await prisma.user.findMany();
+    res.status(200).json({ users: users });
+  } catch (err) {
+    const error = err as Error;
+    console.log(`an error occurred: ${error}`);
+    res.status(500).json({ message: `an error occurred: ${error}` });
+  }
+});
+
+app.patch("/test/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const body = req.body;
+    const updatedUser = await prisma.user.update({
+      where: {
+        id: parseInt(id),
+      },
+      data: body,
+    });
+    res
+      .status(200)
+      .json({ message: "data updated successfully", updatedUser: updatedUser });
+  } catch (err) {
+    const error = err as Error;
+    console.log(`an error occurred during updation: ${error}`);
+    res.status(500).json({ message: `an error occurred: ${error.message}` });
+  }
+});
 
 app.post("/user", async (req: Request, res: Response) => {
   try {
