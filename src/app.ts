@@ -3,9 +3,6 @@ import cors from "cors";
 import compression from "compression";
 import express, { Express, Request, Response, NextFunction } from "express";
 import bodyParser from "body-parser";
-import connectDB from "./config/connectDB";
-import User from "./models/user";
-import { UserType } from "./schemas/userSchema";
 import { PrismaClient, Gender, Prisma } from "@prisma/client";
 
 const app: Express = express();
@@ -67,22 +64,21 @@ app.patch("/test/:id", async (req: Request, res: Response) => {
   }
 });
 
-app.post("/user", async (req: Request, res: Response) => {
-  try {
-    const body = req.body as UserType;
-    const newUser = new User(body);
-    await newUser.save();
-    res
-      .status(200)
-      .json({ message: "user created successfully", user: newUser });
-  } catch (err) {
-    const error = err as Error;
-    console.error(`an error occurred: ${error}`);
-    res
-      .status(500)
-      .json({ message: "an error occurred", error: error.message });
+app.delete('/test/:firstName', async (req:Request,res:Response)=>{
+  try{
+    const { firstName }=req.params;
+    const deletedUser = await prisma.user.deleteMany({
+      where:{
+        firstName:firstName,
+      }
+    })
+    res.status(200).json({message:"user successfully deleted",deletedUser:deletedUser});
+  } catch(err){
+    const error=err as Error;
+    console.log(`an error occurred: ${error.message}`);
+    res.status(500).json({message: `an error occurred: ${error.name}`});
   }
-});
+})
 
 app.use("/", (err: Error, req: Request, res: Response, next: NextFunction) => {
   if (err) {
@@ -91,9 +87,6 @@ app.use("/", (err: Error, req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-connectDB().then(() => {
-  console.log("database successfully connected");
-  app.listen(PORT, () => {
-    console.log(`server is listening on PORT ${PORT}`);
-  });
-});
+app.listen(PORT,()=>{
+  console.log(`server is listening on PORT ${PORT}`);
+})
